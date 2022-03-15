@@ -2,7 +2,6 @@ import Prelude
 import Data.Char
 import System.IO (hSetBuffering, stdin, stdout, BufferMode (NoBuffering))
 
-
 vectorToDec :: Int -> [Int] -> Int
 vectorToDec base = foldr (\x xs -> x + base * xs) 0
 
@@ -173,11 +172,10 @@ cayleyTable conwayPs = do
 
 additionTable :: IO ()
 additionTable = do
-  putStr "Size of GF: "
-  gf <- getLine
-  
-  let prime       = fst $ primePower $ read gf
-      order       = snd $ primePower $ read gf
+  gftriple <- askGF
+  let gf = (\(x,y,z) -> x) gftriple
+      prime = (\(x,y,z) -> y) gftriple
+      order = (\(x,y,z) -> z) gftriple
       cayley      = addTable prime order 
 
   tablePrint cayley
@@ -187,16 +185,17 @@ askGF :: IO (Int, Int, Int)
 askGF = do
   putStr "Size of GF: "
   input <- getLine
+  let invalid = "Invalid Galois Field.\nThis value is not the power of a prime integer.\nPlease try again.\n"
   case (reads input) of
     [(gf, "")] -> do
       let prime       = fst $ primePower $ gf
-          order       = snd $ primePower $ gf
-          
+          order       = snd $ primePower $ gf          
       if prime > 1 then do
-          print ("Galois Field: " ++ show gf ++ " Prime Number: " ++ show prime ++ " Power: " ++ show order)
+          let galoisProperties = "Galois Field: " ++ show gf ++ " Prime Number: " ++ show prime ++ " Power: " ++ show order
+          putStrLn galoisProperties
           return  (gf, prime, order)
-        else putStr("Invalid Galois Field.\nThis value is not the power of a prime integer.\nPlease try again.\n") >> askGF
-    _       -> putStr("Invalid Galois Field.\nThis value is not the power of a prime integer.\nPlease try again.\n") >> askGF
+        else putStr invalid >> askGF
+    _       -> putStr invalid >> askGF
 
 
 
@@ -242,10 +241,7 @@ menuLoop conwayPs = do
     '2' -> arithmetic conwayPs
     '3' -> return ()
     otherwise ->  menuLoop conwayPs 
-
   
-
-
 filename = "CPimport.txt"
 
 main :: IO ()
