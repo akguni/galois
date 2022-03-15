@@ -183,11 +183,29 @@ additionTable = do
   tablePrint cayley
   return ()
 
+askGF :: IO (Int, Int, Int)
+askGF = do
+  putStr "Size of GF: "
+  input <- getLine
+  case (reads input) of
+    [(gf, "")] -> do
+      let prime       = fst $ primePower $ gf
+          order       = snd $ primePower $ gf
+          
+      if prime > 1 then do
+          print ("Galois Field: " ++ show gf ++ " Prime Number: " ++ show prime ++ " Power: " ++ show order)
+          return  (gf, prime, order)
+        else putStr("Invalid Galois Field.\nThis value is not the power of a prime integer.\nPlease try again.\n") >> askGF
+    _       -> putStr("Invalid Galois Field.\nThis value is not the power of a prime integer.\nPlease try again.\n") >> askGF
+
+
 
 arithmetic :: [(Int,Int,[Int])] -> IO ()
 arithmetic conwayPs = do
-  putStr "Size of GF: "
-  gf <- getLine
+  gftriple <- askGF
+  let gf = (\(x,y,z) -> x) gftriple
+      prime = (\(x,y,z) -> y) gftriple
+      order = (\(x,y,z) -> z) gftriple      
   putStrLn "Press Enter for the program to identify an irreducible polynomial for this field"
   putStrLn "OR enter your own irreducible polynomial as an integer value:"
   ir <- getLine
@@ -195,16 +213,14 @@ arithmetic conwayPs = do
   p1i <- getLine
   putStrLn "Enter second polynomial (integer value):"
   p2i <- getLine
-  let prime       = fst $ primePower $ read gf
-      order       = snd $ primePower $ read gf
-      irreducible = if ir== "" then findConway prime order conwayPs else decToVector prime (read ir)
+  let irreducible = if ir== "" then findConway prime order conwayPs else decToVector prime (read ir)
       p1          = decToVector prime (read p1i)
       p2          = decToVector prime (read p2i)
       sMult p     = vectorToDec prime $ divPoly prime (multPoly prime p p2) irreducible
       rAdd        = p1i ++ " + " ++ p2i ++ " = " ++ show (vectorToDec prime $ addPoly prime p1 p2)                 
       rSub        = p1i ++ " - " ++ p2i ++ " = " ++ show (vectorToDec prime $ subPoly prime p1 p2)
       rMult       = p1i ++ " * " ++ p2i ++ " = " ++ show (sMult p1)                                         
-      rDiv        = p1i ++ " / " ++ p2i ++ " = " ++ show  (foldr (\x xs -> if sMult (decToVector prime x) == (read p1i) then x else xs) 0 [0..(pred (read gf))])
+      rDiv        = p1i ++ " / " ++ p2i ++ " = " ++ show  (foldr (\x xs -> if sMult (decToVector prime x) == (read p1i) then x else xs) 0 [0..(pred gf)])
   putStrLn rAdd
   putStrLn rSub
   putStrLn rMult
