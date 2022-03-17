@@ -13,11 +13,11 @@ elementsOrders :: Int -> [(Int, Int)]
 elementsOrders p = map (\n -> (n, order n p)) $ coprimes p
 
 order :: Int -> Int -> Int
-order element base = orderHelp element base element 1
+order element base = orderHelp element base (fromIntegral element) 1
   where
-    orderHelp :: Int -> Int -> Int -> Int -> Int
-    orderHelp e b r o | mod r b == 1 = o
-                      | otherwise    = orderHelp e b (r * e) (succ o)
+    orderHelp :: Int -> Int -> Integer -> Int -> Int
+    orderHelp e b r o | mod r (fromIntegral b) == 1 = o
+                      | otherwise    = orderHelp e b (r * fromIntegral e) (succ o)
 
 generators :: Int -> [Int]
 generators base | elem base $ allprimes base  = filter (\x -> (order x base == pred base)) [2..pred base]
