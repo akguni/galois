@@ -156,17 +156,14 @@ formatPrint l s = if length s < l then formatPrint l (' ':s) else (s ++ " ")
 
 cayleyTable :: [(Int,Int,[Int])] -> IO ()
 cayleyTable conwayPs = do
+  gftriple <- askGF
+  let gf = (\(x,y,z) -> x) gftriple
+      prime = (\(x,y,z) -> y) gftriple
+      order = (\(x,y,z) -> z) gftriple
+  irreducible <- askIrr gftriple conwayPs
+  putStrLn ("Using " ++ show (vectorToDec prime irreducible) ++ " as irreducible polynomial.")
   
-  putStr "Size of GF: "
-  gf <- getLine
-  putStrLn "Enter an irreducible polynomial as [a0, a1 ...] OR leave blank for a Conway Polynomial:"
-  ir <- getLine
-  
-  let prime       = fst $ primePower $ read gf
-      order       = snd $ primePower $ read gf
-      irreducible = if ir== "" then findConway prime order conwayPs else read ir                                 
-      cayley      = multTable' prime order irreducible
-
+  let cayley      = multTable' prime order irreducible
   tablePrint cayley
   return ()
 
@@ -200,8 +197,8 @@ askGF = do
 
 askIrr :: (Int, Int, Int) -> [(Int,Int,[Int])] -> IO ([Int])
 askIrr (gf, prime, order) conwayPs = do
-  putStrLn "Press Enter for the program to identify an irreducible polynomial for this field"
-  putStrLn ("OR enter your own irreducible polynomial as an Integer value between " ++ show gf ++ " and " ++ show (pred (gf * prime)))
+  putStrLn ("You can enter your own irreducible polynomial as an Integer value between " ++ show gf ++ " and " ++ show (pred (gf * prime)))
+  putStrLn "OR just hit return and the program will identify a suitable irreducable polynomial using Frank Lübeck's Conway Tables"
   input <- getLine
   let ir = (\[(x,_)] -> x) (reads input :: [(Int, String)])
   let validate  | input == "" = return (findConway prime order conwayPs)
