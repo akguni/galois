@@ -233,12 +233,12 @@ arithmetic conwayPs = do
   putStrLn rAdd
   putStrLn rSub
   putStrLn rMult
-  putStrLn (rDiv ++ "\n")
+  putStrLn rDiv
   return ()
 
 menuLoop :: [(Int,Int,[Int])] -> IO ()
 menuLoop conwayPs = do
-  putStrLn "FINITE FIELDS MENU"
+  putStrLn "\nFINITE FIELDS MENU"
   putStrLn "0 to generate a Multiplication Table"
   putStrLn "1 to generate an Addition Table"
   putStrLn "2 to perform all 4 arithmetic ops on 2 values"
