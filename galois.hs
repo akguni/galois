@@ -198,6 +198,18 @@ askGF = do
     _       -> putStr invalid >> askGF
 
 
+askIrr :: (Int, Int, Int) -> [(Int,Int,[Int])] -> IO ([Int])
+askIrr (gf, prime, order) conwayPs = do
+  putStrLn "Press Enter for the program to identify an irreducible polynomial for this field"
+  putStrLn ("OR enter your own irreducible polynomial as an Integer value between " ++ show gf ++ " and " ++ show (pred (gf * prime)))
+  input <- getLine
+  let ir = (\[(x,_)] -> x) (reads input :: [(Int, String)])
+  let validate  | input == "" = return (findConway prime order conwayPs)
+                | (reads input :: [(Int, String)]) == [] = putStrLn "Invalid entry. Please try again." >> askIrr (gf, prime, order) conwayPs
+                | (ir < gf) || (ir > (gf * prime - 1))   = putStrLn "Polynomial out of range. Please try again." >> askIrr (gf, prime, order) conwayPs
+                | not (irreducible prime (decToVector prime ir)) = putStrLn "This polynomial has a zero root. Please try again." >> askIrr (gf, prime, order) conwayPs
+                | otherwise                                      = return (decToVector prime ir)
+  validate
 
 arithmetic :: [(Int,Int,[Int])] -> IO ()
 arithmetic conwayPs = do
@@ -205,15 +217,13 @@ arithmetic conwayPs = do
   let gf = (\(x,y,z) -> x) gftriple
       prime = (\(x,y,z) -> y) gftriple
       order = (\(x,y,z) -> z) gftriple      
-  putStrLn "Press Enter for the program to identify an irreducible polynomial for this field"
-  putStrLn "OR enter your own irreducible polynomial as an integer value:"
-  ir <- getLine
+  irreducible <- askIrr gftriple conwayPs
+  putStrLn ("Using " ++ show (vectorToDec prime irreducible) ++ " as irreducible polynomial.")
   putStrLn "Enter first polynomial (integer value):"
   p1i <- getLine
   putStrLn "Enter second polynomial (integer value):"
   p2i <- getLine
-  let irreducible = if ir== "" then findConway prime order conwayPs else decToVector prime (read ir)
-      p1          = decToVector prime (read p1i)
+  let p1          = decToVector prime (read p1i)
       p2          = decToVector prime (read p2i)
       sMult p     = vectorToDec prime $ divPoly prime (multPoly prime p p2) irreducible
       rAdd        = p1i ++ " + " ++ p2i ++ " = " ++ show (vectorToDec prime $ addPoly prime p1 p2)                 
@@ -223,7 +233,7 @@ arithmetic conwayPs = do
   putStrLn rAdd
   putStrLn rSub
   putStrLn rMult
-  putStrLn rDiv      
+  putStrLn (rDiv ++ "\n")
   return ()
 
 menuLoop :: [(Int,Int,[Int])] -> IO ()
@@ -236,13 +246,16 @@ menuLoop conwayPs = do
   m <- getChar
   putStrLn ""
   case m of
-    '0' -> cayleyTable conwayPs
-    '1' -> additionTable
-    '2' -> arithmetic conwayPs
+    '0' -> cayleyTable conwayPs >> menuLoop conwayPs 
+    '1' -> additionTable >> menuLoop conwayPs 
+    '2' -> arithmetic conwayPs >> menuLoop conwayPs 
     '3' -> return ()
-    otherwise ->  menuLoop conwayPs 
+    otherwise ->  menuLoop conwayPs
   
+
 filename = "CPimport.txt"
+
+
 
 main :: IO ()
 main = do
@@ -252,6 +265,5 @@ main = do
   
   file <- readFile filename
   let conwayPs = parseTable $ lines file
-  print (findConway 3 5 conwayPs)
   menuLoop conwayPs
   return () 
