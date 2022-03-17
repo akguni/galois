@@ -248,11 +248,9 @@ menuLoop conwayPs = do
     '2' -> arithmetic conwayPs >> menuLoop conwayPs 
     '3' -> return ()
     otherwise ->  menuLoop conwayPs
-  
+
 
 filename = "CPimport.txt"
-
-
 
 main :: IO ()
 main = do
