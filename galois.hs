@@ -208,6 +208,7 @@ askIrr (gf, prime, order) conwayPs = do
                 | otherwise                                      = return (decToVector prime ir)
   validate
 
+
 arithmetic :: [(Int,Int,[Int])] -> IO ()
 arithmetic conwayPs = do
   gftriple <- askGF
@@ -216,10 +217,8 @@ arithmetic conwayPs = do
       order = (\(x,y,z) -> z) gftriple      
   irreducible <- askIrr gftriple conwayPs
   putStrLn ("Using " ++ show (vectorToDec prime irreducible) ++ " as irreducible polynomial.")
-  putStrLn "Enter first polynomial (integer value):"
-  p1i <- getLine
-  putStrLn "Enter second polynomial (integer value):"
-  p2i <- getLine
+  p1i <- obtain ("Enter first polynomial (integer value):") gf
+  p2i <- obtain ("Enter second polynomial (integer value):") gf
   let p1          = decToVector prime (read p1i)
       p2          = decToVector prime (read p2i)
       sMult p     = vectorToDec prime $ divPoly prime (multPoly prime p p2) irreducible
@@ -232,6 +231,17 @@ arithmetic conwayPs = do
   putStrLn rMult
   putStrLn rDiv
   return ()
+    where
+      obtain :: String -> Int -> IO String
+      obtain prompt gf = do
+        putStrLn prompt
+        input <- getLine
+        let p = (\[(x,_)] -> x) (reads input :: [(Int, String)])
+        let validate  | (reads input :: [(Int, String)]) == [] = putStrLn "Invalid entry. Please try again." >> obtain prompt gf
+                      | (p < 1) || (p >= gf)                   = putStrLn "Polynomial out of range. Please try again." >> obtain prompt gf
+                      | otherwise                              = return (show p)
+        validate                      
+   
 
 menuLoop :: [(Int,Int,[Int])] -> IO ()
 menuLoop conwayPs = do
